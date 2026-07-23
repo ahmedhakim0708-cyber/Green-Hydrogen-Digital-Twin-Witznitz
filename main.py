@@ -1,12 +1,17 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from models.solar import SolarPlant
 print("=" * 50)
 print("GREEN HYDROGEN DIGITAL TWIN")
 print("=" * 50)
 
 # Load monthly irradiation dataset
 df = pd.read_csv("data/monthly_irradiation.csv")
+solar = SolarPlant(df["PVGIS_GWh"])
+annual_energy = solar.annual_energy()
+
+print(f"Annual PV Energy : {annual_energy:.2f} GWh")
 
 print("\nMonthly PV dataset:\n")
 print(df)
