@@ -1,7 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from models.battery import Battery
+from models.electrolyzer import Electrolyzer
 from models.solar import SolarPlant
+from simulation.simulation import DigitalTwin
+from simulation.engine import run_simulation
 print("=" * 50)
 print("GREEN HYDROGEN DIGITAL TWIN")
 print("=" * 50)
@@ -23,10 +27,18 @@ print(df)
 specific_energy = 55      # kWh per kg H2
 
 # Convert PV energy from GWh to kWh
-pv_energy_kWh = df["PVGIS_GWh"] * 1_000_000
+solar = SolarPlant(df["PVGIS_GWh"] * 1_000_000)
 
-# Calculate hydrogen production
-hydrogen_kg = pv_energy_kWh / specific_energy
+battery = Battery(capacity_kwh=120_000)
+
+electrolyzer = Electrolyzer(
+    specific_energy=specific_energy,
+    rated_power_kw=40_000
+)
+
+digital_twin = DigitalTwin(solar, battery, electrolyzer)
+
+hydrogen_kg = digital_twin.run()
 
 # Add results to the DataFrame
 df["Hydrogen_kg"] = hydrogen_kg
@@ -77,3 +89,21 @@ plt.tight_layout()
 plt.savefig("results/hydrogen_production.png", dpi=300)
 
 plt.show()
+battery = Battery(capacity_kwh=120000)
+
+print("\nBattery Test")
+print("----------------")
+
+battery.charge(50000)
+print("SOC =", battery.get_soc())
+
+battery.charge(90000)
+print("SOC =", battery.get_soc())
+
+battery.discharge(30000)
+print("SOC =", battery.get_soc())
+print("\n===== ENGINE TEST =====")
+
+results = run_simulation()
+
+print(results)

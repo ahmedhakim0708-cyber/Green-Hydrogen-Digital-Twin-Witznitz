@@ -1,3 +1,10 @@
+from data.parameters import (
+    INVERTER_EFFICIENCY,
+    CABLE_EFFICIENCY,
+    PV_DEGRADATION
+)
+
+
 class SolarPlant:
     """
     Solar PV plant model.
@@ -7,7 +14,23 @@ class SolarPlant:
         self.monthly_energy = monthly_energy
 
     def annual_energy(self):
-        return self.monthly_energy.sum()
+        annual_energy = self.monthly_energy.sum()
+
+        usable_energy = (
+            annual_energy
+            * INVERTER_EFFICIENCY
+            * CABLE_EFFICIENCY
+            * PV_DEGRADATION
+        )
+
+        return usable_energy
 
     def monthly_energy_output(self):
-        return self.monthly_energy
+        usable_monthly_energy = (
+            self.monthly_energy
+            * INVERTER_EFFICIENCY
+            * CABLE_EFFICIENCY
+            * PV_DEGRADATION
+        )
+
+        return usable_monthly_energy
