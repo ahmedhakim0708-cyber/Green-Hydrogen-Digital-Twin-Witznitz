@@ -39,14 +39,14 @@ digital_twin = DigitalTwin(solar, battery, electrolyzer)
 
 hydrogen_kg = digital_twin.run()
 
-# Add results to the DataFrame
+Add results to the DataFrame
 df["Hydrogen_kg"] = hydrogen_kg
 
 print("\nHydrogen Production:\n")
 print(df)
-# ==================================================
-# NumPy Statistics
-# ==================================================
+
+NumPy Statistics
+
 
 annual_h2 = np.sum(df["Hydrogen_kg"])
 
@@ -56,9 +56,9 @@ maximum_h2 = np.max(df["Hydrogen_kg"])
 
 minimum_h2 = np.min(df["Hydrogen_kg"])
 
-print("\n==============================")
+print("\")
 print("Simulation Results")
-print("==============================")
+
 
 print(f"Annual hydrogen production : {annual_h2:,.0f} kg")
 
@@ -67,9 +67,9 @@ print(f"Average monthly production : {average_h2:,.0f} kg")
 print(f"Maximum monthly production : {maximum_h2:,.0f} kg")
 
 print(f"Minimum monthly production : {minimum_h2:,.0f} kg")
-# ==================================================
-# Visualization
-# ==================================================
+
+Visualization
+
 
 plt.figure(figsize=(10, 5))
 
@@ -91,7 +91,7 @@ plt.show()
 battery = Battery(capacity_kwh=120000)
 
 print("\nBattery Test")
-print("----------------")
+
 
 battery.charge(50000)
 print("SOC =", battery.get_soc())
@@ -101,7 +101,7 @@ print("SOC =", battery.get_soc())
 
 battery.discharge(30000)
 print("SOC =", battery.get_soc())
-print("\n===== ENGINE TEST =====")
+print("\n ENGINE TEST ")
 
 results = run_simulation()
 
