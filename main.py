@@ -19,14 +19,13 @@ print(f"Annual PV Energy : {annual_energy:.2f} GWh")
 
 print("\nMonthly PV dataset:\n")
 print(df)
-# ==================================================
-# Hydrogen Production Calculation
-# ==================================================
 
-# Electrolyzer specific energy consumption
+Hydrogen Production 
+
+Electrolyzer specific energy consumption
 specific_energy = 55      # kWh per kg H2
 
-# Convert PV energy from GWh to kWh
+Convert PV energy from GWh to kWh
 solar = SolarPlant(df["PVGIS_GWh"] * 1_000_000)
 
 battery = Battery(capacity_kwh=120_000)
