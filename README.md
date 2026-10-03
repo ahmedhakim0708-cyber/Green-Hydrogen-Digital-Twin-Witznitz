@@ -8,7 +8,9 @@ It models a **300 MWp ground-mounted PV plant**, a **160 MWh LFP battery (BESS)*
 **35 MW John Cockerill pressurized alkaline electrolyzer (7 × 5 MW)** at Witznitz near Leipzig,
 and computes the monthly energy balance, the hydrogen output and the
 **Levelized Cost of Hydrogen (LCOH)** over 25 years (IRENA discounted-cash-flow method).
+
       ![Streamlit dashboard](dashboard.png.png)
+      
 ## Features
 - Monthly PV yield from **PVGIS-SARAH3** (or DWD for comparison), scalable to any PV size
 - LFP BESS with depth of discharge, charge/discharge efficiency and daily cycling
