@@ -1,108 +1,90 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from models.battery import Battery
-from models.electrolyzer import Electrolyzer
-from models.solar import SolarPlant
-from simulation.simulation import DigitalTwin
+"""
+Green Hydrogen Digital Twin - Witznitz (Saxony)
+Run:  python main.py
+"""
+from pathlib import Path
+
+import matplotlib
+matplotlib.use("Agg")  # save figures without opening windows
+
+from data import parameters as p
+from simulation.economics import thesis_reproduction
 from simulation.engine import run_simulation
-print("=" * 50)
-print("GREEN HYDROGEN DIGITAL TWIN")
-print("=" * 50)
+from visualization.plots import (plot_lcoh_breakdown, plot_monthly_balance,
+                                 plot_tornado)
 
-# Load monthly irradiation dataset
-df = pd.read_csv("data/monthly_irradiation.csv")
-solar = SolarPlant(df["PVGIS_GWh"])
-annual_energy = solar.annual_energy()
-
-print(f"Annual PV Energy : {annual_energy:.2f} GWh")
-
-print("\nMonthly PV dataset:\n")
-print(df)
-
-Hydrogen Production 
-
-Electrolyzer specific energy consumption
-specific_energy = 55      # kWh per kg H2
-
-Convert PV energy from GWh to kWh
-solar = SolarPlant(df["PVGIS_GWh"] * 1_000_000)
-
-battery = Battery(capacity_kwh=120_000)
-
-electrolyzer = Electrolyzer(
-    specific_energy=specific_energy,
-    rated_power_kw=40_000
-)
-
-digital_twin = DigitalTwin(solar, battery, electrolyzer)
-
-hydrogen_kg = digital_twin.run()
-
-Add results to the DataFrame
-df["Hydrogen_kg"] = hydrogen_kg
-
-print("\nHydrogen Production:\n")
-print(df)
-
-NumPy Statistics
+RESULTS = Path(__file__).resolve().parent / "results"
+RESULTS.mkdir(exist_ok=True)
 
 
-annual_h2 = np.sum(df["Hydrogen_kg"])
-
-average_h2 = np.mean(df["Hydrogen_kg"])
-
-maximum_h2 = np.max(df["Hydrogen_kg"])
-
-minimum_h2 = np.min(df["Hydrogen_kg"])
-
-print("\")
-print("Simulation Results")
+def print_lcoh(title, breakdown):
+    print(f"\n{title}")
+    print("-" * 50)
+    for key, value in breakdown.items():
+        if key != "LCOH":
+            print(f"  {key:<28}: {value:6.2f} EUR/kg")
+    print(f"  {'LCOH':<28}: {breakdown['LCOH']:6.2f} EUR/kg")
 
 
-print(f"Annual hydrogen production : {annual_h2:,.0f} kg")
+def main():
+    print("=" * 50)
+    print("GREEN HYDROGEN DIGITAL TWIN - WITZNITZ")
+    print("=" * 50)
+    print(f"PV {p.PV_CAPACITY_MWP:.0f} MWp | AWE {p.ELECTROLYZER_POWER_KW/1000:.0f} MW | "
+          f"BESS {p.BATTERY_CAPACITY_KWH/1000:.0f} MWh | {p.SPECIFIC_ENERGY_KWH_PER_KG} kWh/kg")
 
-print(f"Average monthly production : {average_h2:,.0f} kg")
+    # 1) Reproduction of thesis Table 13 (inputs of Table 12)
+    print_lcoh("1) Thesis reproduction (Table 12 inputs)", thesis_reproduction())
 
-print(f"Maximum monthly production : {maximum_h2:,.0f} kg")
+    # 2) Simulated plant, both operating modes
+    for mode in ("grid_assisted", "pv_only"):
+        res = run_simulation(mode=mode)
+        df = res["dataframe"]
+        print(f"\n2) Simulation - mode: {mode}")
+        print("-" * 50)
+        print(f"  PV energy (year 1)        : {res['annual_energy']/1e6:8.2f} GWh")
+        print(f"  PV capacity factor        : {res['capacity_factor']*100:8.1f} %")
+        print(f"  Electrolyzer consumption  : {df['Electrolyzer_kWh'].sum()/1e6:8.2f} GWh")
+        print(f"  Grid import               : {res['grid_import']/1e6:8.2f} GWh")
+        print(f"  Grid export               : {res['grid_export']/1e6:8.2f} GWh")
+        print(f"  PV share of electrolyzer  : {res['pv_share']*100:8.1f} %")
+        print(f"  Hydrogen production       : {res['annual_h2']/1000:8.0f} t/year "
+              f"({res['annual_h2']/365/1000:.1f} t/day)")
+        print_lcoh(f"  LCOH ({mode})", res["lcoh"])
 
-print(f"Minimum monthly production : {minimum_h2:,.0f} kg")
+        df.to_csv(RESULTS / f"monthly_results_{mode}.csv", index=False)
+        plot_monthly_balance(df, RESULTS / f"energy_balance_{mode}.png")
+        plot_lcoh_breakdown(res["lcoh"], RESULTS / f"lcoh_{mode}.png",
+                            title=f"LCOH ({mode})")
 
-Visualization
+    # 3) Sensitivity analysis (grid-assisted mode, +/- 20 %)
+    base = run_simulation()["lcoh"]["LCOH"]
+    cases = {
+        "PV capacity (MWp)": "pv_capacity_mwp",
+        "BESS capacity (kWh)": "battery_capacity_kwh",
+        "WACC": "wacc",
+        "Grid export price": "export_price",
+        "Grid import price": "import_price",
+    }
+    defaults = {
+        "pv_capacity_mwp": p.PV_CAPACITY_MWP,
+        "battery_capacity_kwh": p.BATTERY_CAPACITY_KWH,
+        "wacc": p.WACC,
+        "export_price": p.GRID_EXPORT_PRICE_EUR_PER_MWH,
+        "import_price": p.GRID_IMPORT_PRICE_EUR_PER_MWH,
+    }
+    tornado = []
+    print("\n3) Sensitivity analysis (+/- 20 %)")
+    print("-" * 50)
+    for label, key in cases.items():
+        low = run_simulation(**{key: defaults[key] * 0.8})["lcoh"]["LCOH"]
+        high = run_simulation(**{key: defaults[key] * 1.2})["lcoh"]["LCOH"]
+        tornado.append((label, low, high))
+        print(f"  {label:<22}: {low:5.2f} / {high:5.2f} EUR/kg")
+    plot_tornado(tornado, base, RESULTS / "sensitivity.png")
+
+    print(f"\nResults and figures saved in: {RESULTS}")
 
 
-plt.figure(figsize=(10, 5))
-
-plt.bar(df["Month"], df["Hydrogen_kg"]/1000)
-
-plt.title("Monthly Hydrogen Production")
-
-plt.xlabel("Month")
-
-plt.ylabel("Hydrogen Production (tonnes)")
-
-plt.grid(axis="y", linestyle="--", alpha=0.5)
-
-plt.tight_layout()
-
-plt.savefig("results/hydrogen_production.png", dpi=300)
-
-plt.show()
-battery = Battery(capacity_kwh=120000)
-
-print("\nBattery Test")
-
-
-battery.charge(50000)
-print("SOC =", battery.get_soc())
-
-battery.charge(90000)
-print("SOC =", battery.get_soc())
-
-battery.discharge(30000)
-print("SOC =", battery.get_soc())
-print("\n ENGINE TEST ")
-
-results = run_simulation()
-
-print(results)
+if __name__ == "__main__":
+    main()
