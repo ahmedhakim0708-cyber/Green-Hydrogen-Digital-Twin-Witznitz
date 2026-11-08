@@ -1,4 +1,4 @@
-# Green Hydrogen Digital Twin – Witznitz (Saxony, Germany)
+# Green Hydrogen Digital Twin - Witznitz (Saxony, Germany)
 
 Python digital twin accompanying the project thesis
 **"Techno-Economic Optimization of a Solar-Powered Electrolyzer System for Green Hydrogen Production in Germany"**
@@ -22,21 +22,21 @@ and computes the monthly energy balance, the hydrogen output and the
 
 ## Project structure
 ```
-├── app.py                   # Streamlit dashboard
-├── main.py                  # command-line run, saves CSV + figures in results/
-├── data/
-│   ├── parameters.py        # ALL input parameters (with thesis references)
-│   └── monthly_irradiation.csv
-├── models/
-│   ├── solar.py             # SolarPlant
-│   ├── battery.py           # Battery (LFP BESS)
-│   └── electrolyzer.py      # Electrolyzer (AWE)
-├── simulation/
-│   ├── simulation.py        # DigitalTwin – monthly energy balance
-│   ├── economics.py         # LCOH (DCF), thesis reproduction, sensitivity
-│   └── engine.py            # run_simulation() – used by main.py and app.py
-├── visualization/plots.py
-└── results/
+- app.py                   # Streamlit dashboard
+- main.py                  # command-line run, saves CSV + figures in results/
+- data/
+    - parameters.py        # ALL input parameters (with thesis references)
+    - monthly_irradiation.csv
+- models/
+    - solar.py             # SolarPlant
+    - battery.py           # Battery (LFP BESS)
+    - electrolyzer.py      # Electrolyzer (AWE)
+-simulation/
+    - simulation.py        # DigitalTwin – monthly energy balance
+    - economics.py         # LCOH (DCF), thesis reproduction, sensitivity
+    - engine.py            # run_simulation() – used by main.py and app.py
+- visualization/plots.py
+- results/
 ```
 
 ## Installation and use
@@ -53,7 +53,7 @@ streamlit run app.py    # interactive dashboard
 
 ## Main assumptions (see `data/parameters.py`)
 | Parameter | Value |
-|---|---|
+
 | PV capacity / yield (PVGIS) | 300 MWp / 265.37 GWh/yr (CF ≈ 10.1 %) |
 | Electrolyzer | 35 MW AWE, 55.6 kWh/kg H₂ (system, AC), 95 % availability |
 | Production target | 13 t H₂/day |
@@ -66,7 +66,7 @@ streamlit run app.py    # interactive dashboard
 
 ## Example results (`python main.py`)
 | Case | H₂ (t/yr) | Grid import | Grid export | LCOH |
-|---|---|---|---|---|
+
 | Thesis reproduction (Table 12 inputs) | 4,508 | 29.9 GWh | 89.8 GWh | 5.62 €/kg |
 | Simulated, `grid_assisted` | 4,508 | 67.7 GWh | 78.1 GWh | 6.14 €/kg |
 | Simulated, `pv_only` | 3,647 | 0 | 58.3 GWh | 7.01 €/kg |
